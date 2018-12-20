@@ -1,0 +1,1 @@
+function edge2 = closeEdge(edge)edge2 = double(edge);    s1 = strel('line',5,0);    s2 = strel('line',5,90);    s3 = strel('line',5,45);    s4 = strel('line',5,135);            masks ={s1,s2,s3,s4};        for i = 1:numel(masks)        edge2 =imclose(edge2,masks{i});    end    end
