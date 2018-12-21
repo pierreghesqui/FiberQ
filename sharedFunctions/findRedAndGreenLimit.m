@@ -1,4 +1,10 @@
 function   listSkelf = findRedAndGreenLimit(listSkelf,im,param)
+%FINDREDANDGREENLIMIT : find the separation betwen IdU and CldU
+
+%listSkelf : list of segmented fibers
+%im : intensity of green and red channel
+%param : parameters given by the function "Metric"
+
 %figure; imshow(im,[])%figure; imshow(segm2Im(listSkelf,'',0))
 FiberThickness = param.thicknessFib;
 opts.smoothing = 1;
@@ -22,7 +28,7 @@ for i = 1:nbStrands
         indG = sub2ind([s(1),s(2),3],XY(:,2),XY(:,1),2*ones(size(XY,1),1));
         intR = smooth(im(indR),2*FiberThickness);
         intG = smooth(im(indG),2*FiberThickness);
-        if 0
+        if 0 %if you want to visualise the color profile and localise the fiber
         figure; plot(intR,'red','LineWidth',2),hold on, plot(intG,'green','LineWidth',2)
         set(gca,'FontSize',15)
         end
@@ -61,7 +67,7 @@ for i = 1:nbStrands
         end
     end
     
-    %% fonction qui transforme le bleu en rouge ou vert
+    %% Convert uncertain region to green or red
         color = deleteBlueColor(color); 
         dist = param.minPulseLength;
         color = deleteSmallGreenSpot (color,dist);

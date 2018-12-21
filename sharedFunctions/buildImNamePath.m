@@ -1,4 +1,12 @@
 function [imName,imPath] = buildImNamePath(expFold_p,format)
+%BUILDIMNAMEPATH : make the list of all images in the directory "expFold_p"
+%only .png, .tif, .czi and .dv are accepted
+
+%expFold_p : name of the directory where to find images
+%format : (optional) format of the image we want to proceed
+%imName : name of the image : example : {'image1.png'}
+%imPath : paths of the images : example : {'C:\Destkop\image1.png'}
+
 if nargin<2
     format = {'png','tif','czi','dv'};
 end

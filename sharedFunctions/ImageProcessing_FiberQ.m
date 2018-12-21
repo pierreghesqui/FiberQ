@@ -1,92 +1,93 @@
-function ParForFunction (imPath_i,expFold_p,FiberQ_options,EOPs)
+function ImageProcessing_FiberQ (imPath_i,WhichChannelIsWhat,EOPs)
+%IMAGEPROCESSING_FIBERQ is the main function of fiberQ. It loads the image,
+%processes it, saves the result images and builds the result spreadsheet.
+
+%---impPath_i : path of the image 
+%---WhichChannelIsWhat : parameter given by the function "buildFiberQ_options"
+%to know which channel is IdU and CldU and which nucleotide analogue is the
+%first pulse. All those parameters have been written by the user in the
+%interface.
+%---EOPs : list of all the Experimentally Optimised parameters (see article). They can be
+%modified in the user interface (see parameters or advanced parameters)
+
+expFold_p = strsplit(imPath_i,filesep);
+expFold_p = fullfile(expFold_p{1:end-1});
 imName_i = splitAfterLastFileSep(imPath_i);
 splittedName = strsplit(imName_i,'.');lengthFormat = length(splittedName{end});
+
 %----------Create Result Folders--------------
 if~exist(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1)),'dir')
     mkdir(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1)))
 end
 %----------LoadImage --------------------------
-%dname = 
 logit(expFold_p,'Load Image')
-[I_rg] = loadIm(imPath_i,FiberQ_options);
+[I_rg] = loadIm(imPath_i,WhichChannelIsWhat);
 logit(expFold_p,'Load Image Done')
-%figure; imshow(I_rg,[])
-%imwrite(I_rg,'..\article\I_rg.tif')
 
-%%=========================================================================
 %% Pre-Processing
-%%========================================================================
 
 [I_rgN,s,...
-    grayImage,PSF] = PreprocessingFiber (I_rg,EOPs);%figure; imshow(I_rgN,[]),hold on, plot(listSkel{1}.XY(:,1),listSkel{1}.XY(:,2))
-logit(expFold_p,'PreprocessingFiber Done')
+    grayImage,PSF] = PreprocessingFiber (I_rg,EOPs);
+logit(expFold_p,'Preprocessing Done')
 
-%=====================================================================================
-%% Processing
-%=====================================================================================
-%% Step : Get largeSegment
+%% First fiber segmentation
 param = Metric(PSF,EOPs);
-[BW_rough] = getSegments(grayImage,param,...
-    1);
-logit(expFold_p,'getSegments Done')
 
-%---
+%---Edge detection method ---
+[BW_rough] = EdgeDetectionMethod(grayImage,param,...
+    1);
+logit(expFold_p,'Edge detection Done')
+
+%--- if the image is empty, exit the algo:
 if ~any(BW_rough(:))
     return
 end
-%I_rgN2 =cat(3,mat2gray(I_rgN(:,:,1)),mat2gray(I_rgN(:,:,2)),mat2gray(I_rgN(:,:,3)));
-%figure; imshow(I_rgN2,[])
+
+%---remove large shapes---
 [BW_roughf]=deleteLargeShape(BW_rough,param);%figure; imshowpair(BW_rough,BW_roughf)
 logit(expFold_p,'deleteLargeShape Done')
-%---
 
-[imSkel,imBlob] = separateSkelvsBlob(BW_roughf,param);%figure; imshowpair(imSkel,imBlob)
+
+%% Fiber Splicing
+
+%---Separate object in two categories : 1- Blobs (small fat objects) and
+%2-Strands (long thin objects)
+[imStrand,imBlob] = separateSkelvsBlob(BW_roughf,param);%figure; imshowpair(imSkel,imBlob)
 logit(expFold_p,'separateSkelvsBlob Done')
 
-%% PruneSkel : elaguer l'image
+%CheckpointSaving (if you want to debug the code from here without starting afresh)
 save(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1),...
-    'checkpointBeforePruneSkel.mat'));
-% 
-% load(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1),...
-%     'checkpointBeforePruneSkel.mat'))
-logit(expFold_p,'PruneSkel...')
-listSkel = PruneSkel(imSkel,imBlob,BW_rough,grayImage,param,...
+    'checkpointBeforeMainFiberSplice.mat'));
+
+%--- Fiber Splicing-----
+logit(expFold_p,'FiberSplicing...')
+listSkel = mainFiberSplice(imStrand,imBlob,BW_rough,grayImage,param,...
     fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1)));
-logit(expFold_p,'PruneSkel Done')
+%Important Tip : to observe listkel, use the function "segm2Im"...
+%...example : figure; imshow(segm2Im(listSkel,'',0))
+logit(expFold_p,'FiberSplicing Done')
 save(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1),...
-     'listSkelAfterPruneSkel.mat'),'listSkel');
-% load(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1),...
-%     'checkpointBeforePruneSkel.mat'))
-% load(fullfile(expFold_p,'Results',imName_i(1:end-lengthFormat-1),...
-%       'listSkelAfterPruneSkel.mat'))
+     'listSkelAfterMainFiberSplice.mat'),'listSkel');
+
+%--- Write the maximum density on each fiber segmented (eg. see
+%listSkel{1}.maxDensity)
 listSkel = setDensityOnSkel(listSkel,BW_rough,param);
 
-%% Step : Build red and green ratios
-toPlot = 0;
+%% Step : Color assignment
 intIm = imgaussfilt(I_rgN,param.thicknessFib/5,'Padding','symmetric');
 listSkel = findRedAndGreenLimit(listSkel,intIm,param);
+logit(expFold_p,'Color assignment Done')
 
-%% Control fibers
-%listSkel=controlFibers(listSkel,I_rgN,PSF);
-
-%% Table
-
+%% Build the result spreadsheet
 [listSkel,Results_AllFibers] = buildResultTable(...
-    listSkel, imName_i,FiberQ_options);%figure; imshow(segm2Im(listSkel,'',0))
+    listSkel, imName_i,WhichChannelIsWhat);%figure; imshow(segm2Im(listSkel,'',0))
 [Results_BicolorFibers]=buildResultTableForBicolorFiber(...
-    Results_AllFibers,FiberQ_options);
+    Results_AllFibers,WhichChannelIsWhat);
 indBico = Results_AllFibers.nb_Of_Parts==2;
-logit(expFold_p,'findRedAndGreenLimit Done')
 
-% maxSplicingDistance = 
-% maxSplicingAngle = 
-% maxDensity = 
-
-%=========================================================================
-%% Display Results
-%=========================================================================
-
-skelSegm       = segm2Im(listSkel,'',0); 
+%% SAVE RESULT IMAGES AND SPREADSHEET IN THE RESULT FOLDER
+% For this part you need the computer vision toolbox
+skelSegm      = segm2Im(listSkel,'',0); 
 imBox         = drawBoundingBoxes(I_rgN, skelSegm, [255,255,255]);
 skelSegmColor =segm2colorIm(listSkel,2);%figure; imshow(skelSegmColor,[])
 I_colorSkel2 = imfuse2(I_rgN,skelSegmColor);%figure; imshow(I_colorSkel2,[])

@@ -1,4 +1,8 @@
 function [eout1,eout2,thresh,gv_45,gh_135] = edgeModified(varargin)
+%This function is the "edge" function of matlab but slightly modified : The
+%threshold of the canny edge detector are calculated as the otsu threshold
+%of the gradient image (see article)
+
 %EDGE Find edges in intensity image.
 %   EDGE takes an intensity or a binary image I as its input, and returns a
 %   binary image BW of the same size as I, with 1's where the function

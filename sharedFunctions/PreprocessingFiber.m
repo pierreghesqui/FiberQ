@@ -12,7 +12,7 @@ s = size(grayImage);
 param = Metric(2,EOPs);
 
 %% Step : binarisation and skeletisation
-[largeSegment] = getSegments(grayImage,param);%figure; imshowpair(largeSegment,im)
+[largeSegment] = EdgeDetectionMethod(grayImage,param);%figure; imshowpair(largeSegment,im)
 
 %% Step :  filterHighDensity
 largeSegment = filterHighDensity2(largeSegment,7);%figure; imshowpair(largeSegment,largeSegmentF)

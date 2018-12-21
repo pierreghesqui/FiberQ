@@ -1,4 +1,4 @@
-function PruneGraph(listSkelRoot,param)
+function FiberSplice(listSkelRoot,param)
 if isa(listSkelRoot,'ListSegm')
     listSegm = listSkelRoot;
     %listSegm.Filter(param.minLength4SkeletonBefore);%remove from list segments in forbiden zone and small segments
@@ -101,7 +101,7 @@ while(numel(listSegm)>=cpt)
     if any(~tryConnect) &&~chosenSegm.isInForbidZone
         chosenSegm.nbSplices=chosenSegm.nbSplices+sum(~tryConnect);
         
-        PruneGraph({chosenSegm},param);
+        FiberSplice({chosenSegm},param);
     end
     
     cpt = cpt+1;
