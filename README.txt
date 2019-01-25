@@ -1,7 +1,7 @@
 FIBERQ : Open-source algorithm for automatic quantification of DNA fibers
 -------------------------------------------------------------------------
-PLEASE CITE THE FOLLOWING ARTICLE IF YOU USE THIS SOFTWARE :
-TODO...
+PLEASE CITE THE FOLLOWING ARTICLE IF YOU USE THIS SOFTWARE IN A PUBLICATION :
+Ghesquière, P., Elsherbiny, A., Fortier, E., McQuaid, M., Mazzaferri, J., Bélanger, F., Cheriet, F., Wurtele, H., & Costantino, S. (2019). An open-source algorithm for rapid unbiased determination of DNA fiber length. DNA Repair.
 
 In this file, you will find a description of the software FiberQ for the 
 quantification of DNA fiber length. 
